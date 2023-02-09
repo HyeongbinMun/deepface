@@ -147,8 +147,51 @@ class Face:
         print(("1 image infer time: {0:03f}".format(self.infer_time / len(img_list))))
 
     def inference_by_video(self):
-        result = list()
-        pass
+        capture = cv2.VideoCapture(self.media_path)
+        length = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
+        width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = capture.get(cv2.CAP_PROP_FPS)
+        fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+        frame_number = 1
+
+        media_list = self.media_path.split('/')
+        mdeia_name = media_list[-1]
+        save_media_name = mdeia_name.replace(".mp4", "_result.mp4")
+        save_mdeia_path = os.path.join(self.save_path, save_media_name)
+        video_writer = cv2.VideoWriter(save_mdeia_path, fourcc, int(fps), (width, height))
+
+        print("video info:")
+        print(f"\tvideo path:  {self.media_path}")
+        print(f"\tvideo fps:   {fps}")
+        print(f"\tlength : {length}")
+        print(f"\tresolution : {width} * {height}")
+
+        while True:
+            ret, frame = capture.read()
+            if not ret:
+                break
+            try:
+                if self.infer_type == 'detection':
+                    infer_result = self.face_detection(frame)
+                    result = self.detection_matching(infer_result)
+                elif self.infer_type == 'recognition':
+                    recognition_result = self.face_recognition(frame)
+                    result = self.recognition_matching(recognition_result)
+                else:
+                    print('no infer type')
+                    break
+                bbox_image = self.vis.draw_bboxes(frame, result)
+                video_writer.write(bbox_image)
+            except:
+                video_writer.write(frame)
+                print('\n{0} is not face'.format(frame_number))
+
+            print('video inference : {0}/{1}'.format(length, frame_number), end='\r', flush=True)
+            frame_number += 1
+
+        capture.release()
+        video_writer.release()
 
     def main(self):
         if self.data_type == 'image':
@@ -162,11 +205,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--model", default='ArcFace', type=str, help="face recognition model")
     parser.add_argument("--backend", default='retinaface', type=str, help="face detection backends")
-    parser.add_argument("--infer_type", default="recognition", type=str, help="recognition or detection")
-    parser.add_argument("--data_type", default="image", type=str, help="image or video or db")
-    parser.add_argument("--media_path", default="/hdd/face/soccer/arab_frame", type=str, help="media path")
+    parser.add_argument("--infer_type", default="detection", type=str, help="recognition or detection")
+    parser.add_argument("--data_type", default="video", type=str, help="image or video or db")
+    parser.add_argument("--media_path", default="/workspace/data/video/test_video.mp4", type=str, help="media path")
     parser.add_argument("--db_path", default="/workspace/data/origin_face_ver2", type=str, help="db path")
-    parser.add_argument("--save_path", default="/workspace/results/arab_rec_result/", type=str, help="save result path")
+    parser.add_argument("--save_path", default="/workspace/results/test_video/", type=str, help="save result path")
 
     option = parser.parse_known_args()[0]
 
