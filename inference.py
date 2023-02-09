@@ -187,11 +187,14 @@ class Face:
                 video_writer.write(frame)
                 print('\n{0} is not face'.format(frame_number))
 
-            print('video inference : {0}/{1}'.format(length, frame_number), end='\r', flush=True)
+            print("\r video inference : {0}/{1}\t".format(frame_number, length), end="")
             frame_number += 1
+            if self.infer_type == 'recognition':print('\n')
 
         capture.release()
         video_writer.release()
+        print(("\ntotal infer time: {0:03f}".format(self.infer_time)))
+        print(("1 frame infer time: {0:03f}".format(self.infer_time / length)))
 
     def main(self):
         if self.data_type == 'image':
@@ -207,7 +210,7 @@ if __name__ == '__main__':
     parser.add_argument("--backend", default='retinaface', type=str, help="face detection backends")
     parser.add_argument("--infer_type", default="detection", type=str, help="recognition or detection")
     parser.add_argument("--data_type", default="video", type=str, help="image or video or db")
-    parser.add_argument("--media_path", default="/workspace/data/video/test_video.mp4", type=str, help="media path")
+    parser.add_argument("--media_path", default="/workspace/data/video/test_video_2.mp4", type=str, help="media path")
     parser.add_argument("--db_path", default="/workspace/data/origin_face_ver2", type=str, help="db path")
     parser.add_argument("--save_path", default="/workspace/results/test_video/", type=str, help="save result path")
 
